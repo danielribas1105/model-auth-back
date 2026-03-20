@@ -41,6 +41,12 @@ pip install -r requirements.txt
 
 uvicorn app.main:app --reload
 
+## 🌳 Arquitetura da aplicação
+
+tree /f | more
+
+tree /f /a | more
+
 ## 🏦 Criando tabelas e rodando a primeira migração
 
 alembic init alembic
