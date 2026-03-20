@@ -9,11 +9,13 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     image: Optional[str] = None
+    active: bool
 
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     image: Optional[str] = None
+    active: Optional[bool]
 
 
 # Data returned to the client (output — never exposes the password)
@@ -24,6 +26,7 @@ class UserResponse(BaseModel):
     emailVerified: bool
     image: Optional[str]
     createdAt: datetime
+    active: bool
 
     class Config:
         from_attributes = True  # Permite converter model SQLAlchemy → Pydantic

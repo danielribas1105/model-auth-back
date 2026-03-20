@@ -1,37 +1,42 @@
+from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models.usuario import Usuario
-from app.schemas.usuario import UsuarioCreate, UsuarioResponse, LoginRequest, Token
-from app.services.auth import hash_senha, verificar_senha, criar_token
+from fastapi.security import OAuth2PasswordRequestForm
+from app.modules.user.schema import UserCreate, UserResponse, LoginRequest, Token
+from app.modules.auth.service import (
+    create_access_token,
+    create_refresh_token,
+    authenticate_user,
+)
 
-router = APIRouter(prefix="/auth", tags=["Autenticação"])
-
-
-@router.post("/registro", response_model=UsuarioResponse, status_code=201)
-def registrar(dados: UsuarioCreate, db: Session = Depends(get_db)):
-    # Verifica se e-mail já existe
-    if db.query(Usuario).filter(Usuario.email == dados.email).first():
-        raise HTTPException(status_code=400, detail="E-mail já cadastrado")
-
-    usuario = Usuario(
-        nome=dados.nome, email=dados.email, senha_hash=hash_senha(dados.senha)
-    )
-    db.add(usuario)
-    db.commit()
-    db.refresh(usuario)
-    return usuario
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/login", response_model=Token)
-def login(dados: LoginRequest, db: Session = Depends(get_db)):
-    usuario = db.query(Usuario).filter(Usuario.email == dados.email).first()
-
-    if not usuario or not verificar_senha(dados.senha, usuario.senha_hash):
+@router.post("/token")
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+) -> Token:
+    print("trying to login")
+    user = await authenticate_user(form_data.username, form_data.password)
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="E-mail ou senha incorretos",
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = criar_token({"sub": str(usuario.id)})
-    return {"access_token": token, "token_type": "bearer"}
+    if not user.active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token, expire = create_access_token(data={"sub": str(user.id)})
+    refresh_token, _ = await create_refresh_token(user_id=str(user.id))
+
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        expire_at=expire,
+        refresh_token=refresh_token,
+    )

@@ -1,8 +1,10 @@
+from fastapi import HTTPException
+from fastapi_async_sqlalchemy import db
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.modules.user.model import User
 from app.modules.user.schema import UserCreate, UserUpdate
-from app.core.auth import hash_senha
-from fastapi import HTTPException
+from app.utils.security import get_hash_password
 
 
 def create_user(db: Session, data: UserCreate) -> User:
@@ -12,7 +14,7 @@ def create_user(db: Session, data: UserCreate) -> User:
     user = User(
         name=data.name,
         email=data.email,
-        senhaHash=hash_senha(data.senha),  # saves the password hash
+        passwordHash=get_hash_password(data.password),  # saves the password hash
         image=data.image,
     )
     db.add(user)
@@ -26,6 +28,12 @@ def get_user_by_id(db: Session, user_id: str) -> User:
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     return user
+
+
+def get_user_by_email(email) -> User | None:
+    result = (db.session.execute(select(User).where(User.email == email))).first()
+
+    return result[0] if result is not None else None
 
 
 def update_user(db: Session, user_id: str, data: UserUpdate) -> User:

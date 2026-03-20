@@ -1,16 +1,18 @@
 from fastapi import FastAPI
-from app.modules.user.route import router as user_router
+
+from app import router
+
 
 app = FastAPI(
-    title="Workout Plan API",
-    description="API para gerenciamento de planos de treino",
+    title="Authentication API",
+    description="API template for user authentication",
     version="1.0.0",
 )
-
-# Registra todos os routers
-app.include_router(user_router)
 
 
 @app.get("/", tags=["Health"])
 def health_check():
     return {"status": "ok"}
+
+
+app.include_router(router.router)
