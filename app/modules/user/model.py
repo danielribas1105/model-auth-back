@@ -1,19 +1,25 @@
 import uuid
+from datetime import datetime
+from typing import Optional
+from sqlalchemy import Column, DateTime, func
+from sqlmodel import Field, SQLModel
 
-from sqlalchemy import Column, String, Boolean, DateTime
-from sqlalchemy.sql import func
-from app.db.database import Base
 
+class User(SQLModel, table=True):
+    __tablename__ = "users"  # type: ignore
 
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    name = Column(String, nullable=False)
-    email = Column(String, unique=True, nullable=False, index=True)
-    passwordHash = Column(String, nullable=True)
-    emailVerified = Column(Boolean, default=False)
-    image = Column(String, nullable=True)
-    active = Column(Boolean, default=True)
-    createdAt = Column(DateTime(timezone=True), server_default=func.now())
-    updatedAt = Column(DateTime(timezone=True), onupdate=func.now())
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str
+    email: str = Field(unique=True, index=True)
+    passwordHash: Optional[str] = Field(default=None, nullable=True)
+    emailVerified: bool = Field(default=False)
+    image: Optional[str] = Field(default=None, nullable=True)
+    active: bool = Field(default=True)
+    createdAt: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+    )
+    updatedAt: Optional[datetime] = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), onupdate=func.now()),
+    )

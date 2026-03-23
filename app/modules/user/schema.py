@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
@@ -15,12 +17,12 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     image: Optional[str] = None
-    active: Optional[bool]
+    active: Optional[bool] = None
 
 
 # Data returned to the client (output — never exposes the password)
 class UserResponse(BaseModel):
-    id: str
+    id: uuid.UUID
     name: str
     email: str
     emailVerified: bool
@@ -36,9 +38,3 @@ class UserResponse(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
-
-
-# JWT token returned after login.
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"

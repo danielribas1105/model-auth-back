@@ -3,7 +3,7 @@ import app.modules.auth.route as auth
 import app.modules.user.route as user
 
 
-router = APIRouter(prefix="/v1")
+router = APIRouter(prefix="/api/v1")
 
 # Register all routers
 router.include_router(auth.router)
