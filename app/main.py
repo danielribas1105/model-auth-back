@@ -6,8 +6,8 @@ from app.config import settings
 
 
 app = FastAPI(
-    title="Authentication API",
-    description="API template for user authentication",
+    title="GestObra API",
+    description="API GestObra Web Application",
     version="1.0.0",
 )
 
